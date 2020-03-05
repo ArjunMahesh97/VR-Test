@@ -1,9 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PlayerEvents : MonoBehaviour
 {
+    public static UnityAction OnTouchPadUp = null;
+    public static UnityAction OnTouchPadDown = null;
+    public static UnityAction<OVRInput.Controller, GameObject> OnControllerSource = null;
+
     public GameObject leftAnchor;
     public GameObject rightAnchor;
     public GameObject headAnchor;
@@ -64,29 +69,61 @@ public class PlayerEvents : MonoBehaviour
         {
             controllerCheck = OVRInput.Controller.Touchpad;
         }
+
+        controller = UpdateSource(controllerCheck, controller);
     }
 
     void CheckInputSource()
     {
-        if (OVRInput.GetDown(OVRInput.Button.Any, OVRInput.Controller.Remote))
-        {
+        //if (OVRInput.GetDown(OVRInput.Button.Any, OVRInput.Controller.Remote))
+        //{
 
-        }
+        //}
 
-        if (OVRInput.GetDown(OVRInput.Button.Any, OVRInput.Controller.LTrackedRemote))
-        {
+        //if (OVRInput.GetDown(OVRInput.Button.Any, OVRInput.Controller.LTrackedRemote))
+        //{
 
-        }
-        
-        if (OVRInput.GetDown(OVRInput.Button.Any, OVRInput.Controller.RTrackedRemote))
-        {
+        //}
 
-        }
+        //if (OVRInput.GetDown(OVRInput.Button.Any, OVRInput.Controller.RTrackedRemote))
+        //{
+
+        //}
+
+        inputSource = UpdateSource(OVRInput.GetActiveController(), inputSource);
+
     }
 
     void CheckInput()
     {
+        if (OVRInput.GetDown(OVRInput.Button.PrimaryTouchpad))
+        {
+            if (OnTouchPadDown != null)
+            {
+                OnTouchPadDown();
+            }
+        }
+        if (OVRInput.GetUp(OVRInput.Button.PrimaryTouchpad))
+        {
+            if (OnTouchPadUp != null)
+            {
+                OnTouchPadUp();
+            }
+        }
+    }
 
+    OVRInput.Controller UpdateSource(OVRInput.Controller check, OVRInput.Controller previous)
+    {
+        if (check == previous) { return previous; }
+
+        GameObject controllerObject = null;
+        controllerSets.TryGetValue(check, out controllerObject);
+
+        if (controllerObject == null) { controllerObject = headAnchor; }
+
+        if (OnControllerSource != null) { OnControllerSource(check, controllerObject); }
+
+        return check;
     }
 
     void PlayerFound()
@@ -107,7 +144,7 @@ public class PlayerEvents : MonoBehaviour
             {OVRInput.Controller.RTrackedRemote,rightAnchor },
             {OVRInput.Controller.Touchpad,headAnchor }
         };
-        return null;
+        return newSets;
     }
 
 }
